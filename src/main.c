@@ -1,30 +1,41 @@
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <netdb.h>
 #include <netinet/in.h>
+
+#define PORT "9002"
 
 int main()
 {
+	int socketfd;
+	struct addrinfo hints;
+	struct addrinfo* servinfo;
 
-	// create socket
-	int socketfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-	if(socketfd == -1)
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	int addr_info_state = getaddrinfo(NULL, PORT, &hints, &servinfo);
+	if(addr_info_state != 0)
 	{
-		printf("Failed to create socket\n");
+		printf("getaddrinfo: %s\n", gai_strerror(addr_info_state));
 		return 1;
 	}
 
-	// specify an address for the socket
-	struct sockaddr_in addr = {
-		.sin_family = AF_INET,
-		.sin_port = htons(9002),
-		.sin_addr = { .s_addr = INADDR_ANY },
-	};
+	socketfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+	if(socketfd == -1)
+	{
+		printf("Failed to create socket: %s\n", gai_strerror(socketfd));
+		return 1;
+	}
 
-	int connection_state = connect(socketfd, (struct sockaddr*)&addr, sizeof(addr));
+	int connection_state = connect(socketfd, servinfo->ai_addr, servinfo->ai_addrlen);
 	if(connection_state == -1)
 	{
 		printf("There ware an error makeing a connection to remote socket\n\n");
