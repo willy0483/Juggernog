@@ -35,16 +35,14 @@ int main()
 		return 1;
 	}
 
-	int connection_state = connect(socketfd, servinfo->ai_addr, servinfo->ai_addrlen);
-	if(connection_state == -1)
+	if(connect(socketfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
 	{
 		printf("There ware an error makeing a connection to remote socket\n\n");
 		return 1;
 	}
 
 	char server_response[256];
-	int read_state = recv(socketfd, &server_response, sizeof(server_response), 0);
-	if(read_state == -1)
+	if(recv(socketfd, &server_response, sizeof(server_response), 0) == -1)
 	{
 		printf("Failed to read from server\n");
 		return 1;
