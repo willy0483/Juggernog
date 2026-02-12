@@ -21,7 +21,7 @@ run: $(BINARY)
 	$(BINARY)
 
 $(BINARY): $(OBJECTS) | $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ $^ -lssl
+	$(CC) $(CFLAGS) -o $@ $^
 
 $(BUILDDIR)/%.o: %.c | $(BUILDDIR)
 	$(CC) $(CFLAGS) -c -o $@ $^

@@ -6,41 +6,42 @@
 
 #include <netinet/in.h>
 
-#include <openssl/ssl.h>
-
 int main()
 {
 
-	int socketfd = socket(AF_INET, SOCK_STREAM, 0);
+	// create socket
+	int socketfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+	if(socketfd == -1)
+	{
+		printf("Failed to create socket\n");
+		return 1;
+	}
 
+	// specify an address for the socket
 	struct sockaddr_in addr = {
 		.sin_family = AF_INET,
-		.sin_port = htons(443),
-		.sin_addr = { .s_addr = htonl(0x08080808) },
+		.sin_port = htons(9002),
+		.sin_addr = { .s_addr = INADDR_ANY },
 	};
 
 	int connection_state = connect(socketfd, (struct sockaddr*)&addr, sizeof(addr));
 	if(connection_state == -1)
 	{
-		printf("There ware an error makeing a connection to socket\n\n");
+		printf("There ware an error makeing a connection to remote socket\n\n");
+		return 1;
 	}
 
-	SSL_CTX* ctx = SSL_CTX_new(TLS_method());
-	SSL* ssl = SSL_new(ctx);
-	SSL_set_fd(ssl, socketfd);
-	SSL_connect(ssl);
+	char server_response[256];
+	int read_state = recv(socketfd, &server_response, sizeof(server_response), 0);
+	if(read_state == -1)
+	{
+		printf("Failed to read from server\n");
+		return 1;
+	}
 
-	char* request = "GET /\r\n\r\n";
-	SSL_write(ssl, request, strlen(request));
+	// print out the servers response
+	printf("The server sent data: %s\n", server_response);
 
-	char buffer[1024] = { 0 };
-	SSL_read(ssl, buffer, 1023);
-
-	printf("Response: \n %s \n", buffer);
-
-	SSL_shutdown(ssl);
-	SSL_free(ssl);
-	SSL_CTX_free(ctx);
 	close(socketfd);
 	return 0;
 }
