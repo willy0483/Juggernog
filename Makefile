@@ -2,6 +2,7 @@ CC = gcc
 INCDIRS = -I.
 OPT = -O0
 CFLAGS = -Wall -g $(INCDIRS) $(OPT)
+LIBS = -lquickrevive
 
 SRCDIR   = src
 BUILDDIR = build
@@ -21,7 +22,7 @@ run: $(BINARY)
 	$(BINARY)
 
 $(BINARY): $(OBJECTS) | $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(BUILDDIR)/%.o: %.c | $(BUILDDIR)
 	$(CC) $(CFLAGS) -c -o $@ $^
