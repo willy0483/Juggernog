@@ -26,6 +26,11 @@ int main(int argc, char* argv[])
 
 	char s[INET6_ADDRSTRLEN];
 
+	int bytes;
+	int sent;
+	int received;
+	int total;
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -72,20 +77,46 @@ int main(int argc, char* argv[])
 					"Connection: close\r\n"
 					"\r\n";
 
-	if(send(socketfd, request, strlen(request), 0) == -1)
+	total = strlen(request);
+	sent = 0;
+	while(sent < total)
 	{
-		qlog(QLOG_ERROR, "send", "failed to send data");
-		return 1;
+		bytes = send(socketfd, request + sent, total - sent, 0);
+		if(bytes < 0)
+		{
+			qlog(QLOG_ERROR, "send", "Failed sent message to socket");
+		}
+		if(bytes == 0)
+		{
+			break;
+		}
+		sent += bytes;
 	}
-	qlog(QLOG_SUCCESS, "send", "send data to socket");
 
-	char buffer[2024];
-	if(recv(socketfd, buffer, sizeof(buffer) - 1, 0) == -1)
+	char response[4096];
+	total = sizeof(response) - 1;
+	received = 0;
+
+	while(received < total)
 	{
-		qlog(QLOG_ERROR, "recv", "failed to read data");
-		return 1;
+		bytes = recv(socketfd, response + received, total - received, 0);
+		if(bytes < 0)
+		{
+			qlog(QLOG_ERROR, "recv", "Failed read message from socket");
+		}
+		if(bytes == 0)
+		{
+			break;
+		}
+		received += bytes;
 	}
-	qlog(QLOG_SUCCESS, "recv", "Response:\n %s", buffer);
+
+	if(received == total)
+	{
+		qlog(QLOG_ERROR, "storing", "storing complete response from socket");
+	}
+
+	qlog(QLOG_INFO, "Response", "%s", response);
 
 	close(socketfd);
 	return 0;
