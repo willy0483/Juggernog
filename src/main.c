@@ -12,6 +12,9 @@
 
 #define PORT "80"
 
+// https://beej.us/guide/bgnet/html/split/system-calls-or-bust.html#system-calls-or-bust
+// 5.6 accept()—“Thank you for calling port 3490.”
+
 void* get_in_addr(struct sockaddr* sa);
 
 int main(int argc, char* argv[])
@@ -63,6 +66,26 @@ int main(int argc, char* argv[])
 	qlog(QLOG_SUCCESS, "connect", "connected to %s", s);
 
 	freeaddrinfo(res);
+
+	char* request = "GET / HTTP/1.1\r\n"
+					"Host: www.example.com\r\n"
+					"Connection: close\r\n"
+					"\r\n";
+
+	if(send(socketfd, request, strlen(request), 0) == -1)
+	{
+		qlog(QLOG_ERROR, "send", "failed to send data");
+		return 1;
+	}
+	qlog(QLOG_SUCCESS, "send", "send data to socket");
+
+	char buffer[2024];
+	if(recv(socketfd, buffer, sizeof(buffer) - 1, 0) == -1)
+	{
+		qlog(QLOG_ERROR, "recv", "failed to read data");
+		return 1;
+	}
+	qlog(QLOG_SUCCESS, "recv", "Response:\n %s", buffer);
 
 	close(socketfd);
 	return 0;
