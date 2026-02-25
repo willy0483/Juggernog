@@ -28,7 +28,6 @@ int main(int argc, char* argv[])
 
 	int bytes;
 	int sent;
-	int received;
 	int total;
 
 	memset(&hints, 0, sizeof(hints));
@@ -93,30 +92,19 @@ int main(int argc, char* argv[])
 		sent += bytes;
 	}
 
-	char response[4096];
-	total = sizeof(response) - 1;
-	received = 0;
-
-	while(received < total)
+	char buffer[1028];
+	while((bytes = recv(socketfd, buffer, sizeof(buffer) - 1, 0)) > 0)
 	{
-		bytes = recv(socketfd, response + received, total - received, 0);
-		if(bytes < 0)
-		{
-			qlog(QLOG_ERROR, "recv", "Failed read message from socket");
-		}
-		if(bytes == 0)
-		{
-			break;
-		}
-		received += bytes;
+		qlog(QLOG_INFO, "bytes", "read %d bytes from socket", bytes);
+		qlog(QLOG_INFO, "buffer", "%s", buffer);
 	}
 
-	if(received == total)
+	if(bytes < 0)
 	{
-		qlog(QLOG_ERROR, "storing", "storing complete response from socket");
+		qlog(QLOG_ERROR, "recv", "failed to read from socket");
+		close(socketfd);
+		return 1;
 	}
-
-	qlog(QLOG_INFO, "Response", "%s", response);
 
 	close(socketfd);
 	return 0;
